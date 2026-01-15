@@ -28,7 +28,6 @@ import {
   Church, 
   Users, 
   Lock, 
-  Bell, 
   Globe, 
   Camera,
   ShieldCheck,

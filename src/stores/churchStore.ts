@@ -37,7 +37,7 @@ export const useChurchStore = defineStore('church', () => {
 
     function updateTribeManager(tribe: string, managerName: string) {
         const index = tribes.value.findIndex(t => t.tribe === tribe);
-        if (index !== -1) {
+        if (index !== -1 && tribes.value[index]) {
             tribes.value[index].managerName = managerName;
         }
     }

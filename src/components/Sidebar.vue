@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { RouterLink, useRoute } from 'vue-router';
+import { RouterLink, useRoute, useRouter } from 'vue-router';
 import { 
   LayoutDashboard, 
   Users, 
@@ -11,6 +11,7 @@ import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores/authStore';
 
 const route = useRoute();
+const router = useRouter();
 const authStore = useAuthStore();
 
 const navigation = [
@@ -19,6 +20,11 @@ const navigation = [
   { name: 'Rapports', href: '/reports', icon: FileText },
   { name: 'Paramètres', href: '/settings', icon: Settings },
 ];
+
+const handleLogout = () => {
+    authStore.logout();
+    router.push('/login');
+};
 </script>
 
 <template>
@@ -52,7 +58,7 @@ const navigation = [
     </nav>
     <div class="p-4 border-t border-gray-100">
       <button
-        @click="authStore.logout()"
+        @click="handleLogout"
         class="group flex w-full items-center gap-x-3 rounded-md p-2 text-sm font-semibold text-gray-600 hover:bg-red-50 hover:text-red-700 transition-all duration-200"
       >
         <LogOut class="h-5 w-5 shrink-0 text-gray-400 group-hover:text-red-500" />

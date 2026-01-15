@@ -85,11 +85,11 @@ const ageGroups = computed(() => {
   ]
   
   memberStore.members.forEach(m => {
-    if (m.age <= 18) groups[0].count++
-    else if (m.age <= 30) groups[1].count++
-    else if (m.age <= 45) groups[2].count++
-    else if (m.age <= 60) groups[3].count++
-    else groups[4].count++
+    if (m.age <= 18 && groups[0]) groups[0].count++
+    else if (m.age <= 30 && groups[1]) groups[1].count++
+    else if (m.age <= 45 && groups[2]) groups[2].count++
+    else if (m.age <= 60 && groups[3]) groups[3].count++
+    else if (groups[4]) groups[4].count++
   })
   
   return groups

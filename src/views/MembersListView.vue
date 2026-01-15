@@ -63,6 +63,13 @@ const paginationRange = computed(() => {
   const end = Math.min(memberStore.currentPage * memberStore.itemsPerPage, memberStore.filteredMembers.length);
   return { start, end, total: memberStore.filteredMembers.length };
 });
+
+const itemsPerPageProxy = computed({
+  get: () => memberStore.itemsPerPage.toString(),
+  set: (val) => {
+    memberStore.itemsPerPage = parseInt(val, 10);
+  }
+});
 </script>
 
 <template>
@@ -160,8 +167,8 @@ const paginationRange = computed(() => {
             <div class="flex items-center gap-2">
               <span class="text-xs text-gray-500 whitespace-nowrap">Lignes par page:</span>
               <Select 
-                v-model="memberStore.itemsPerPage" 
-                :options="itemsPerPageOptions" 
+                v-model="itemsPerPageProxy" 
+                :options="itemsPerPageOptions.map(o => ({ label: o.label, value: o.value.toString() }))" 
                 class="w-28 h-8 text-xs"
               />
             </div>
