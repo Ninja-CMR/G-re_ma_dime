@@ -10,10 +10,10 @@ export interface MonthlyEvolution {
     amount: number;
 }
 
-export interface TribeContribution {
-    tribe: string;
-    amount: number;
-    color: string;
+export interface AchievementGroup {
+    label: string;
+    count: number;
+    color?: string;
 }
 
 export interface AgeGroup {
@@ -24,6 +24,6 @@ export interface AgeGroup {
 export interface ReportsData {
     kpis: KpiData[];
     evolution: MonthlyEvolution[];
-    tribes: TribeContribution[];
+    achievement: AchievementGroup[];
     agePyramid: AgeGroup[];
 }

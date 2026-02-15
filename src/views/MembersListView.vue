@@ -10,13 +10,11 @@ import {
   TableCell, 
   Button, 
   Input, 
-  Badge, 
   Select, 
   Dialog 
 } from '@/components/ui';
 import { useMemberStore } from '@/stores/memberStore';
-import { Search, Filter, UserPlus, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-vue-next';
-import { TRIBES, type Tribe } from '@/types';
+import { Search, UserPlus, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-vue-next';
 import { format } from 'date-fns';
 import { useRouter } from 'vue-router';
 
@@ -29,7 +27,7 @@ const newMember = reactive({
   age: 18,
   gender: 'M' as 'M' | 'F',
   contact: '',
-  tribe: 'Juda' as Tribe,
+  monthlyTarget: 0,
   joinedAt: format(new Date(), 'yyyy-MM-dd')
 });
 
@@ -46,10 +44,7 @@ const goToProfile = (id: string) => {
   router.push(`/members/${id}`);
 };
 
-const tribeOptions = [
-  { label: 'Toutes les tribus', value: 'All' },
-  ...TRIBES.map(t => ({ label: t, value: t }))
-];
+// Removed tribe options
 
 const itemsPerPageOptions = [
   { label: '5 par page', value: 5 },
@@ -96,15 +91,7 @@ const itemsPerPageProxy = computed({
           />
         </div>
         <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full lg:w-auto">
-          <div class="flex items-center gap-2 text-sm text-gray-500 min-w-fit">
-            <Filter class="h-4 w-4" />
-            Tribu:
-          </div>
-          <Select 
-            v-model="memberStore.tribeFilter" 
-            :options="tribeOptions" 
-            class="w-full sm:w-48 bg-gray-50/50"
-          />
+          <!-- Tribe filter removed -->
         </div>
       </div>
 
@@ -114,7 +101,7 @@ const itemsPerPageProxy = computed({
             <TableHeader>
               <TableRow class="bg-gray-50/50">
                 <TableHead>Nom</TableHead>
-                <TableHead>Tribu</TableHead>
+                <TableHead>Objectif Mensuel</TableHead>
                 <TableHead class="hidden md:table-cell">Contact</TableHead>
                 <TableHead class="hidden lg:table-cell">Adhésion</TableHead>
                 <TableHead class="text-right">Actions</TableHead>
@@ -136,7 +123,9 @@ const itemsPerPageProxy = computed({
                   </div>
                 </TableCell>
                 <TableCell>
-                  <Badge variant="gold">{{ member.tribe }}</Badge>
+                  <div class="font-medium text-amber-700">
+                    {{ new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XAF', maximumFractionDigits: 0 }).format(member.monthlyTarget) }}
+                  </div>
                 </TableCell>
                 <TableCell class="hidden md:table-cell text-gray-600">
                   {{ member.contact }}
@@ -253,12 +242,8 @@ const itemsPerPageProxy = computed({
             />
           </div>
           <div class="space-y-2">
-            <Label for="tribe">Tribu</Label>
-            <Select 
-              id="tribe" 
-              v-model="newMember.tribe" 
-              :options="TRIBES.map(t => ({ label: t, value: t }))" 
-            />
+            <Label for="monthlyTarget">Objectif Mensuel (FCFA)</Label>
+            <Input id="monthlyTarget" type="number" v-model="newMember.monthlyTarget" placeholder="Ex: 50000" />
           </div>
         </div>
         <div class="space-y-2">

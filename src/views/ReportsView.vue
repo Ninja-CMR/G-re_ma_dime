@@ -23,11 +23,12 @@ import {
   ArcElement, 
   Filler 
 } from 'chart.js'
-import { Bar, Line, Doughnut } from 'vue-chartjs'
+import { Bar, Doughnut } from 'vue-chartjs'
 import { jsPDF } from 'jspdf'
 import DashboardLayout from '@/components/DashboardLayout.vue'
 import StatCard from '@/components/StatCard.vue'
-import { Card, CardContent, CardHeader, Button } from '@/components/ui'
+import EvolutionChart from '@/components/EvolutionChart.vue'
+import { Card, CardContent, CardHeader, Button, Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui'
 import { useTitheStore } from '@/stores/titheStore'
 import { useMemberStore } from '@/stores/memberStore'
 
@@ -52,6 +53,12 @@ const memberStore = useMemberStore()
 const areaChartRef = ref<any>(null)
 const donutChartRef = ref<any>(null)
 const barChartRef = ref<any>(null)
+
+const globalAchievementRate = computed(() => {
+  const totalTarget = memberStore.members.reduce((sum, m) => sum + m.monthlyTarget, 0);
+  if (totalTarget === 0) return '0%';
+  return `${Math.round((titheStore.totalTithesThisMonth / totalTarget) * 100)}%`;
+});
 
 // Consistency with Dashboard Palette & EvolutionChart.vue
 const colors = {
@@ -85,62 +92,63 @@ const ageGroups = computed(() => {
   ]
   
   memberStore.members.forEach(m => {
-    if (m.age <= 18 && groups[0]) groups[0].count++
-    else if (m.age <= 30 && groups[1]) groups[1].count++
-    else if (m.age <= 45 && groups[2]) groups[2].count++
-    else if (m.age <= 60 && groups[3]) groups[3].count++
-    else if (groups[4]) groups[4].count++
+    const age = m.age;
+    if (age <= 18) groups[0]!.count++
+    else if (age <= 30) groups[1]!.count++
+    else if (age <= 45) groups[2]!.count++
+    else if (age <= 60) groups[3]!.count++
+    else groups[4]!.count++
   })
   
   return groups
 })
 
-// Dynamic Tribe Distribution
-const tribesDistribution = computed(() => {
-  const tribeTotals: Record<string, number> = {};
-  titheStore.tithes.forEach(t => {
-    const member = memberStore.getMemberById(t.memberId);
-    if (member) {
-      tribeTotals[member.tribe] = (tribeTotals[member.tribe] || 0) + t.amount;
-    }
+// Distribution of achievement levels
+const achievementDistribution = computed(() => {
+  const levels = [
+    { label: '0-25%', count: 0 },
+    { label: '26-50%', count: 0 },
+    { label: '51-75%', count: 0 },
+    { label: '76-100%', count: 0 },
+  ];
+  
+  titheStore.membersYearlyStats.forEach(stats => {
+    if (stats.percentage <= 25) levels[0]!.count++;
+    else if (stats.percentage <= 50) levels[1]!.count++;
+    else if (stats.percentage <= 75) levels[2]!.count++;
+    else levels[3]!.count++;
   });
-  return Object.entries(tribeTotals).map(([tribe, amount]) => ({ tribe, amount }));
+  
+  return levels;
 })
 
-// Evolution (Last 6 months + Current)
-const evolutionHistory = [
-  { month: 'Juil 25', amount: 45000 },
-  { month: 'Août 25', amount: 52000 },
-  { month: 'Sep 25', amount: 48000 },
-  { month: 'Oct 25', amount: 61000 },
-  { month: 'Nov 25', amount: 55000 },
-  { month: 'Déc 25', amount: 72000 },
-  { month: 'Jan 26', amount: titheStore.totalTithesThisMonth },
-]
-
-// Chart Data Configurations
-const areaChartData = computed(() => ({
-  labels: evolutionHistory.map(d => d.month),
-  datasets: [{
-    label: 'Dîmes (XAF)',
-    data: evolutionHistory.map(d => d.amount),
-    borderColor: colors.amber,
-    backgroundColor: colors.amberLight,
-    fill: true,
-    tension: 0.4,
-    pointRadius: 4,
-    pointHoverRadius: 6,
-    pointBackgroundColor: colors.amber,
-    borderWidth: 2,
-  }]
-}))
+const globalChartData = computed(() => {
+  const history = titheStore.globalYearlyStats.history;
+  return {
+    labels: history.map(h => h.month),
+    datasets: [
+      {
+        label: 'Entrées Réelles (XAF)',
+        data: history.map(h => h.entries),
+        color: '#10b981', // emerald-500
+        fill: true
+      },
+      {
+        label: 'Cible Globale (XAF)',
+        data: history.map(h => h.target),
+        color: '#d97706', // amber-600
+        borderDash: [5, 5]
+      }
+    ]
+  };
+});
 
 const donutChartData = computed(() => ({
-  labels: tribesDistribution.value.map(t => t.tribe),
+  labels: achievementDistribution.value.map(l => l.label),
   datasets: [{
-    data: tribesDistribution.value.map(t => t.amount),
+    data: achievementDistribution.value.map(l => l.count),
     backgroundColor: [
-      '#d97706', '#374151', '#4b5563', '#92400e', '#6b7280', '#d1d5db'
+      '#ef4444', '#f59e0b', '#10b981', '#3b82f6'
     ],
     borderWidth: 1,
     borderColor: '#ffffff',
@@ -230,7 +238,7 @@ const exportToPDF = async () => {
   yPos += 6;
   pdf.text(`- Donateurs Actifs: ${titheStore.activeMembersCount}`, 25, yPos);
   yPos += 6;
-  pdf.text(`- Tribu Majeure: ${titheStore.mostGenerousTribe}`, 25, yPos);
+  pdf.text(`- Taux d'atteinte Global: ${globalAchievementRate.value}`, 25, yPos);
   
   yPos += 15;
 
@@ -260,7 +268,7 @@ const exportToPDF = async () => {
   };
 
   addChartToPdf(areaChartRef.value, 'Évolution Annuelle des Versements', 80);
-  addChartToPdf(donutChartRef.value, 'Répartition par Tribu', 80);
+  addChartToPdf(donutChartRef.value, 'Atteinte des Objectifs', 80);
   addChartToPdf(barChartRef.value, 'Pyramide des Âges', 80);
 
   pdf.save(`Rapport_GereMaDime_${new Date().toISOString().split('T')[0]}.pdf`);
@@ -268,27 +276,28 @@ const exportToPDF = async () => {
 
 const exportToCSV = () => {
   let csvContent = "data:text/csv;charset=utf-8,";
+  const history = titheStore.globalYearlyStats.history;
   
   // Section 1: KPIs
   csvContent += "SECTION: RESUME DES KPIS\n";
   csvContent += "Indicateur,Valeur\n";
   csvContent += `Total Dîmes (Mois),${titheStore.totalTithesThisMonth}\n`;
   csvContent += `Donateurs Actifs,${titheStore.activeMembersCount}\n`;
-  csvContent += `Tribu Majeure,${titheStore.mostGenerousTribe}\n\n`;
+  csvContent += `Taux d'atteinte Global,${globalAchievementRate.value}\n\n`;
   
   // Section 2: Evolution
-  csvContent += "SECTION: EVOLUTION MENSUELLE\n";
-  csvContent += "Mois,Montant (XAF)\n";
-  evolutionHistory.forEach(row => {
-    csvContent += `${row.month},${row.amount}\n`;
+  csvContent += "SECTION: EVOLUTION MENSUELLE (REEL VS CIBLE)\n";
+  csvContent += "Mois,Entrées (XAF),Cible (XAF)\n";
+  history.forEach(row => {
+    csvContent += `${row.month},${row.entries},${row.target}\n`;
   });
   csvContent += "\n";
   
-  // Section 3: Tribes
-  csvContent += "SECTION: REPARTITION PAR TRIBU\n";
-  csvContent += "Tribu,Montant total\n";
-  tribesDistribution.value.forEach(row => {
-    csvContent += `${row.tribe},${row.amount}\n`;
+  // Section 3: Achievement
+  csvContent += "SECTION: ATTEINTE DES OBJECTIFS\n";
+  csvContent += "Tranche,Nombre de membres\n";
+  achievementDistribution.value.forEach(row => {
+    csvContent += `${row.label},${row.count}\n`;
   });
   csvContent += "\n";
   
@@ -354,51 +363,101 @@ const exportToCSV = () => {
           :trend="{ value: '+2.1%', positive: true }"
         />
         <StatCard
-          title="Tribu Majeure"
-          :value="titheStore.mostGenerousTribe"
+          title="Taux d'atteinte Global"
+          :value="globalAchievementRate"
           :icon="Gem"
-          description="Plus forte contribution cumulée"
+          description="Progression vers l'objectif total"
         />
       </div>
 
-      <!-- Main Charts Section -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <!-- Annual Evolution -->
-        <Card class="border-none shadow-sm lg:col-span-2">
-          <CardHeader class="border-b border-gray-50 pb-4">
-            <h3 class="text-lg font-semibold flex items-center gap-2">
-              <TrendingUp class="h-5 w-5 text-amber-600" />
-              Évolution Annuelle
-            </h3>
-            <p class="text-sm text-muted-foreground">Progression des versements sur les 12 derniers mois</p>
-          </CardHeader>
-          <CardContent class="p-6 h-[400px]">
-            <Line ref="areaChartRef" :data="areaChartData" :options="commonOptions" />
-          </CardContent>
-        </Card>
+      <!-- Main Content with Tabs -->
+      <Tabs defaultValue="tithes" class="w-full">
+        <TabsList class="mb-4">
+          <TabsTrigger value="tithes" class="flex items-center gap-2">
+            <Banknote class="w-4 h-4" />
+            Dîmes
+          </TabsTrigger>
+          <TabsTrigger value="demographics" class="flex items-center gap-2">
+            <Users class="w-4 h-4" />
+            Démographie
+          </TabsTrigger>
+        </TabsList>
 
-        <!-- Tribes Donut -->
-        <Card class="border-none shadow-sm">
-          <CardHeader class="border-b border-gray-50 pb-4">
-            <h3 class="text-lg font-semibold">Répartition par Tribu</h3>
-            <p class="text-sm text-muted-foreground">Proportion des dons par origine tribale</p>
-          </CardHeader>
-          <CardContent class="p-6 h-[350px]">
-            <Doughnut ref="donutChartRef" :data="donutChartData" :options="donutOptions" />
-          </CardContent>
-        </Card>
+        <TabsContent value="tithes" class="space-y-6">
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Annual Evolution (Real vs Target) -->
+            <Card class="border-none shadow-sm lg:col-span-2">
+              <CardHeader class="border-b border-gray-50 pb-4">
+                <h3 class="text-lg font-semibold flex items-center gap-2">
+                  <TrendingUp class="h-5 w-5 text-amber-600" />
+                  Performance Annuelle (Entrées vs Objectifs)
+                </h3>
+                <p class="text-sm text-muted-foreground">Comparaison des entrées réelles par rapport à la cible globale sur l'année</p>
+              </CardHeader>
+              <CardContent class="p-6 h-[400px]">
+                <EvolutionChart 
+                  ref="areaChartRef" 
+                  :labels="globalChartData.labels" 
+                  :datasets="globalChartData.datasets" 
+                />
+              </CardContent>
+            </Card>
 
-        <!-- Age Pyramid -->
-        <Card class="border-none shadow-sm">
-          <CardHeader class="border-b border-gray-50 pb-4">
-            <h3 class="text-lg font-semibold">Pyramide des Âges</h3>
-            <p class="text-sm text-muted-foreground">Démographie actuelle de l'église (Données réelles)</p>
-          </CardHeader>
-          <CardContent class="p-6 h-[350px]">
-            <Bar ref="barChartRef" :data="barChartData" :options="commonOptions" />
-          </CardContent>
-        </Card>
-      </div>
+            <!-- Achievement Donut -->
+            <Card class="border-none shadow-sm">
+              <CardHeader class="border-b border-gray-50 pb-4">
+                <h3 class="text-lg font-semibold">Répartition de l'Atteinte</h3>
+                <p class="text-sm text-muted-foreground">Fidèles regroupés par niveau de contribution à l'objectif</p>
+              </CardHeader>
+              <CardContent class="p-6 h-[350px]">
+                <Doughnut ref="donutChartRef" :data="donutChartData" :options="donutOptions" />
+              </CardContent>
+            </Card>
+
+            <!-- Context Info -->
+            <Card class="border-none shadow-sm bg-amber-50/30">
+              <CardHeader>
+                <h3 class="text-lg font-semibold flex items-center gap-2">
+                  <Gem class="h-5 w-5 text-amber-600" />
+                  Aperçu Stratégique
+                </h3>
+              </CardHeader>
+              <CardContent class="space-y-4">
+                <p class="text-sm text-muted-foreground leading-relaxed">
+                  Cette section analyse spécifiquement la performance des dîmes. Le graphique principal compare le flux de trésorerie réel aux engagements mensuels cumulés de tous les membres.
+                </p>
+                <div class="space-y-2">
+                  <div class="flex justify-between text-sm">
+                    <span class="font-medium text-gray-700">Taux moyen d'atteinte</span>
+                    <span class="font-bold text-amber-700">{{ globalAchievementRate }}</span>
+                  </div>
+                  <div class="w-full h-2 bg-amber-100 rounded-full overflow-hidden">
+                    <div class="h-full bg-amber-500" :style="{ width: globalAchievementRate }"></div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="demographics" class="space-y-6">
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Age Pyramid -->
+            <Card class="border-none shadow-sm lg:col-span-2">
+              <CardHeader class="border-b border-gray-50 pb-4">
+                <h3 class="text-lg font-semibold flex items-center gap-2">
+                  <Users class="h-5 w-5 text-amber-600" />
+                  Pyramide des Âges
+                </h3>
+                <p class="text-sm text-muted-foreground">Répartition démographique de l'église</p>
+              </CardHeader>
+              <CardContent class="p-6 h-[400px]">
+                <Bar ref="barChartRef" :data="barChartData" :options="commonOptions" />
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   </DashboardLayout>
 </template>

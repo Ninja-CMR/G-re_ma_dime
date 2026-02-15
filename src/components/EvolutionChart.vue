@@ -26,7 +26,14 @@ ChartJS.register(
 );
 
 const props = defineProps<{
-  data: { date: string; amount: number }[];
+  labels: string[];
+  datasets: {
+    label: string;
+    data: number[];
+    color: string;
+    fill?: boolean;
+    borderDash?: number[];
+  }[];
 }>();
 
 const chartRef = ref<any>(null);
@@ -46,7 +53,7 @@ const exportToPDF = () => {
 
   pdf.setFontSize(18);
   pdf.setTextColor(217, 119, 6); // amber-600
-  pdf.text('Rapport d\'évolution des Dîmes', 20, 30);
+  pdf.text('Rapport d\'évolution', 20, 30);
   
   pdf.setFontSize(12);
   pdf.setTextColor(107, 114, 128);
@@ -54,26 +61,28 @@ const exportToPDF = () => {
 
   pdf.addImage(imgData, 'PNG', 20, 70, canvas.width, canvas.height);
   
-  pdf.save('evolution-dimes.pdf');
+  pdf.save('rapport-evolution.pdf');
 };
 
-defineExpose({ exportToPDF });
-
 const chartData = computed(() => ({
-  labels: props.data.map(d => d.date),
-  datasets: [
-    {
-      label: 'Dîmes (FCFA)',
-      data: props.data.map(d => d.amount),
-      borderColor: '#d97706', // amber-600
-      backgroundColor: 'rgba(217, 119, 6, 0.1)',
-      fill: true,
-      tension: 0.4,
-      pointRadius: 4,
-      pointHoverRadius: 6,
-    }
-  ]
+  labels: props.labels,
+  datasets: props.datasets.map(ds => ({
+    label: ds.label,
+    data: ds.data,
+    borderColor: ds.color,
+    backgroundColor: ds.fill ? `${ds.color}1A` : 'transparent', // 10% opacity for fill
+    fill: ds.fill ?? false,
+    tension: 0.4,
+    pointRadius: 4,
+    pointHoverRadius: 6,
+    borderDash: ds.borderDash || [],
+  }))
 }));
+
+defineExpose({ 
+  exportToPDF,
+  chart: computed(() => chartRef.value?.chart)
+});
 
 const chartOptions = {
   responsive: true,

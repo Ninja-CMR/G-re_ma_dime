@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import DashboardLayout from '@/components/DashboardLayout.vue';
+import EvolutionChart from '@/components/EvolutionChart.vue';
 import { 
   Button, 
   Card, 
@@ -28,7 +29,9 @@ import {
   Gem, 
   PlusCircle, 
   History, 
-  CheckCircle2 
+  CheckCircle2,
+  Target,
+  TrendingUp
 } from 'lucide-vue-next';
 import { format } from 'date-fns';
 
@@ -70,6 +73,32 @@ const formatCurrency = (val: number) => {
   }).format(val);
 };
 
+const memberStats = computed(() => {
+  return titheStore.membersYearlyStats.find(s => s.memberId === memberId);
+});
+
+const personalChartData = computed(() => {
+  if (!memberStats.value || !member.value) return { labels: [], datasets: [] };
+  const history = memberStats.value.history;
+  return {
+    labels: history.map(h => h.month),
+    datasets: [
+      {
+        label: 'Versement Mensuel (XAF)',
+        data: history.map(h => h.amount),
+        color: '#10b981', // emerald-500
+        fill: true
+      },
+      {
+        label: 'Cible Mensuelle (XAF)',
+        data: history.map(_ => member.value!.monthlyTarget),
+        color: '#d97706', // amber-600
+        borderDash: [5, 5]
+      }
+    ]
+  };
+});
+
 if (!member.value) {
     router.push('/members');
 }
@@ -98,7 +127,7 @@ if (!member.value) {
               {{ member.name.charAt(0) }}
             </div>
             <div class="text-center mt-4">
-               <Badge variant="gold" class="px-4 py-1">{{ member.tribe }}</Badge>
+               <Badge variant="gold" class="px-4 py-1">Objectif: {{ formatCurrency(member.monthlyTarget) }}</Badge>
             </div>
           </CardHeader>
           <CardContent class="space-y-4 pt-4">
@@ -118,12 +147,37 @@ if (!member.value) {
               </div>
             </div>
 
-            <div class="bg-amber-50 rounded-xl p-4 mt-6">
-              <div class="flex items-center justify-between mb-2">
-                <span class="text-xs font-semibold text-amber-900 uppercase">Cumul des Dîmes</span>
-                <Gem class="h-4 w-4 text-amber-600" />
+            <div class="space-y-4 mt-6">
+              <div class="bg-amber-50 rounded-xl p-4">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-xs font-semibold text-amber-900 uppercase">Performance du mois</span>
+                  <Target class="h-4 w-4 text-amber-600" />
+                </div>
+                <div class="space-y-2">
+                  <div class="flex justify-between text-sm">
+                    <span class="text-amber-800">Progression</span>
+                    <span class="font-bold text-amber-700">{{ memberStats?.percentage }}%</span>
+                  </div>
+                  <div class="w-full h-2 bg-amber-200/50 rounded-full overflow-hidden">
+                    <div 
+                      class="h-full bg-amber-500 rounded-full transition-all duration-500" 
+                      :style="{ width: `${memberStats?.percentage}%` }"
+                    ></div>
+                  </div>
+                  <div class="flex justify-between text-xs text-amber-600 font-medium">
+                    <span>{{ formatCurrency(memberStats?.current || 0) }}</span>
+                    <span>/ {{ formatCurrency(member.monthlyTarget) }}</span>
+                  </div>
+                </div>
               </div>
-              <p class="text-2xl font-bold text-amber-700 tracking-tight">{{ formatCurrency(totalGiven) }}</p>
+
+              <div class="bg-gray-50 rounded-xl p-4">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-xs font-semibold text-gray-700 uppercase">Cumul historique</span>
+                  <Gem class="h-4 w-4 text-gray-400" />
+                </div>
+                <p class="text-2xl font-bold text-gray-900 tracking-tight">{{ formatCurrency(totalGiven) }}</p>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -139,6 +193,20 @@ if (!member.value) {
               <PlusCircle class="mr-2 h-4 w-4" />
               Enregistrer une Dîme
             </Button>
+          </div>
+
+          <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="p-4 border-b border-gray-50 bg-gray-50/30">
+              <h4 class="text-sm font-bold text-gray-700 uppercase tracking-wider">Récapitulatif Annuel {{ new Date().getFullYear() }}</h4>
+            </div>
+            <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 p-4">
+              <div v-for="h in memberStats?.history" :key="h.month" class="flex flex-col items-center p-2 rounded-lg border border-gray-50 bg-gray-50/50">
+                <span class="text-[10px] font-bold text-gray-400 uppercase">{{ h.month }}</span>
+                <span :class="['text-xs font-bold mt-1', h.amount > 0 ? 'text-emerald-600' : 'text-gray-300']">
+                  {{ h.amount > 0 ? formatCurrency(h.amount).replace('FCFA', '') : '-' }}
+                </span>
+              </div>
+            </div>
           </div>
 
           <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
@@ -173,6 +241,24 @@ if (!member.value) {
               Aucune dîme enregistrée pour le moment.
             </div>
           </div>
+
+          <!-- Progression Chart -->
+          <Card class="border-none shadow-sm">
+            <CardHeader class="pb-2">
+              <h3 class="text-lg font-semibold flex items-center gap-2">
+                <TrendingUp class="h-5 w-5 text-amber-600" />
+                Progression Mensuelle
+              </h3>
+              <p class="text-sm text-muted-foreground mt-1">Évolution des versements par rapport à la cible personnelle</p>
+            </CardHeader>
+            <CardContent class="p-4">
+              <EvolutionChart 
+                v-if="memberStats" 
+                :labels="personalChartData.labels" 
+                :datasets="personalChartData.datasets" 
+              />
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>

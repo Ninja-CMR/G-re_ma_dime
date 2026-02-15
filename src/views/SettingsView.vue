@@ -15,18 +15,11 @@ import {
   TabsList,
   TabsTrigger,
   TabsContent,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
   Badge
 } from '@/components/ui'
 import { 
   User, 
   Church, 
-  Users, 
   Lock, 
   Globe, 
   Camera,
@@ -95,10 +88,6 @@ const handleSaveSecurity = () => {
     securityForm.confirmPassword = ''
 }
 
-const handleUpdateTribeManager = (tribe: string, manager: string) => {
-    churchStore.updateTribeManager(tribe, manager)
-    triggerToast(`Responsable de la tribu ${tribe} mis à jour.`)
-}
 
 const handleLogoutDevices = () => {
     triggerToast('Toutes les autres sessions ont été déconnectées.')
@@ -152,13 +141,6 @@ const handleLogoutDevices = () => {
                 >
                   <Church class="h-4 w-4" />
                   Église
-                </TabsTrigger>
-                <TabsTrigger 
-                    value="tribus" 
-                    class="justify-start gap-3 px-4 py-3 data-[state=active]:bg-amber-50 data-[state=active]:text-amber-700 data-[state=active]:shadow-none hover:bg-gray-100 rounded-lg transition-all"
-                >
-                  <Users class="h-4 w-4" />
-                  Tribus
                 </TabsTrigger>
                 <TabsTrigger 
                     value="securite" 
@@ -270,54 +252,6 @@ const handleLogoutDevices = () => {
                 </Card>
               </TabsContent>
 
-              <!-- Tribus Tab -->
-              <TabsContent value="tribus">
-                <Card class="border-none shadow-sm">
-                  <CardHeader>
-                    <h3 class="text-xl font-bold text-gray-900">Gestion des Tribus</h3>
-                    <p class="text-sm text-muted-foreground">Assignez des responsables pour chacune des 12 tribus.</p>
-                  </CardHeader>
-                  <CardContent>
-                    <div class="rounded-md border border-gray-100">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Tribu</TableHead>
-                            <TableHead>Responsable assigné</TableHead>
-                            <TableHead class="text-right">Action</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          <TableRow v-for="tribu in churchStore.tribes" :key="tribu.tribe">
-                            <TableCell class="font-medium">
-                                <Badge variant="secondary" class="bg-amber-100 text-amber-700 border-none font-bold">
-                                    {{ tribu.tribe }}
-                                </Badge>
-                            </TableCell>
-                            <TableCell>
-                              <Input 
-                                v-model="tribu.managerName" 
-                                class="h-8 max-w-[200px]" 
-                                placeholder="Nom du responsable" 
-                              />
-                            </TableCell>
-                            <TableCell class="text-right">
-                              <Button 
-                                variant="ghost" 
-                                size="sm" 
-                                @click="handleUpdateTribeManager(tribu.tribe, tribu.managerName)"
-                                class="text-amber-600 hover:text-amber-700 hover:bg-amber-50"
-                              >
-                                Enregistrer
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        </TableBody>
-                      </Table>
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
 
               <!-- Securite Tab -->
               <TabsContent value="securite">
