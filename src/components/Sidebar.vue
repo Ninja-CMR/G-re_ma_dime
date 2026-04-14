@@ -29,8 +29,9 @@ const handleLogout = () => {
 
 <template>
   <div class="flex h-full w-full flex-col bg-white">
-    <div class="flex h-16 shrink-0 items-center px-6 border-b border-gray-100">
-      <span class="text-xl font-bold bg-gradient-to-r from-amber-600 to-amber-400 bg-clip-text text-transparent">
+    <div class="flex h-16 shrink-0 items-center px-6 border-b border-gray-100 gap-3">
+      <img src="/logo.png" alt="Logo" class="h-8 w-8 object-contain rounded-md" />
+      <span class="text-xl font-bold bg-gradient-to-r from-amber-600 to-amber-400 bg-clip-text text-transparent font-display">
         Gère ma Dîme
       </span>
     </div>

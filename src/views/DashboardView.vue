@@ -6,7 +6,7 @@ import EvolutionChart from '@/components/EvolutionChart.vue';
 import { useRouter } from 'vue-router';
 import { useTitheStore } from '@/stores/titheStore';
 import { useMemberStore } from '@/stores/memberStore';
-import { Card, CardHeader, CardContent, Button, Table, TableHeader, TableBody, TableRow, TableHead, TableCell, Input, Select } from '@/components/ui';
+import { Card, CardHeader, CardContent, Button, Table, TableHeader, TableBody, TableRow, TableHead, TableCell, Input, Select, TableLoader } from '@/components/ui';
 import { Search, Banknote, Users, Target, FileDown, TrendingUp, TrendingDown, ArrowRightCircle, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-vue-next';
 
 const titheStore = useTitheStore();
@@ -251,6 +251,11 @@ const formatCurrency = (value: number) => {
                 </TableRow>
               </tfoot>
             </Table>
+          </div>
+
+          <!-- Loading State -->
+          <div v-if="titheStore.loading || memberStore.loading" class="p-6">
+            <TableLoader :rows="memberStore.itemsPerPage" :columns="14" />
           </div>
 
           <!-- Pagination -->

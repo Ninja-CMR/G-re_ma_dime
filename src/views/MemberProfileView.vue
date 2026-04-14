@@ -17,7 +17,8 @@ import {
   TableCell, 
   Dialog, 
   Input, 
-  Label 
+  Label,
+  TableLoader
 } from '@/components/ui';
 import { useMemberStore } from '@/stores/memberStore';
 import { useTitheStore } from '@/stores/titheStore';
@@ -236,6 +237,11 @@ if (!member.value) {
                   </TableRow>
                 </TableBody>
               </Table>
+            </div>
+
+            <!-- Loading State -->
+            <div v-if="titheStore.loading" class="p-6">
+              <TableLoader :rows="5" :columns="3" />
             </div>
             <div v-if="titheHistory.length === 0" class="p-12 text-center text-muted-foreground bg-gray-50/20">
               Aucune dîme enregistrée pour le moment.

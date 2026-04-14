@@ -31,9 +31,14 @@ import {
 } from 'lucide-vue-next'
 import { useChurchStore } from '@/stores/churchStore'
 import { useAuthStore } from '@/stores/authStore'
+import { useMemberStore } from '@/stores/memberStore'
+import { useTitheStore } from '@/stores/titheStore'
+import { Trash2, AlertTriangle, RefreshCw } from 'lucide-vue-next'
 
 const churchStore = useChurchStore()
 const authStore = useAuthStore()
+const memberStore = useMemberStore()
+const titheStore = useTitheStore()
 
 // Success message state (Simple toast alternative)
 const showSuccessToast = ref(false)
@@ -91,6 +96,23 @@ const handleSaveSecurity = () => {
 
 const handleLogoutDevices = () => {
     triggerToast('Toutes les autres sessions ont été déconnectées.')
+}
+
+const isResetting = ref(false)
+const showResetConfirm = ref(false)
+
+const handleResetData = async () => {
+    isResetting.value = true
+    try {
+        await memberStore.resetToInitialMembers()
+        await titheStore.resetToInitialTithes()
+        triggerToast('Toutes les données ont été réinitialisées aux valeurs initiales.')
+        showResetConfirm.value = false
+    } catch (error) {
+        alert('Erreur lors de la réinitialisation des données.')
+    } finally {
+        isResetting.value = false
+    }
 }
 
 </script>
@@ -323,6 +345,56 @@ const handleLogoutDevices = () => {
                         <LogOut class="h-4 w-4" />
                         Déconnecter toutes les autres sessions
                       </Button>
+                    </CardContent>
+                  </Card>
+
+                  <!-- Danger Zone -->
+                  <Card class="border-none shadow-sm border-l-4 border-l-rose-600 bg-rose-50/30">
+                    <CardHeader>
+                      <div class="flex items-center gap-2 text-rose-700">
+                        <AlertTriangle class="h-5 w-5" />
+                        <h3 class="text-xl font-bold">Zone de Danger</h3>
+                      </div>
+                      <p class="text-sm text-rose-600/80">Actions irréversibles sur vos données.</p>
+                    </CardHeader>
+                    <CardContent class="space-y-4">
+                      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-white border border-rose-100 rounded-lg">
+                        <div class="space-y-1">
+                          <p class="text-sm font-semibold text-gray-900">Réinitialiser l'application</p>
+                          <p class="text-xs text-muted-foreground">Supprime toutes les données actuelles et restaure les membres et dîmes de démonstration.</p>
+                        </div>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          class="border-rose-200 text-rose-700 hover:bg-rose-50 hover:text-rose-800 gap-2"
+                          @click="showResetConfirm = true"
+                        >
+                          <RefreshCw class="h-4 w-4" :class="{ 'animate-spin': isResetting }" />
+                          Réinitialiser
+                        </Button>
+                      </div>
+
+                      <div v-if="showResetConfirm" class="p-4 bg-rose-100/50 rounded-lg border border-rose-200 space-y-3">
+                        <p class="text-sm font-medium text-rose-800">Êtes-vous sûr ? Cette action est définitive.</p>
+                        <div class="flex gap-2">
+                          <Button 
+                            variant="destructive" 
+                            size="sm" 
+                            @click="handleResetData"
+                            :disabled="isResetting"
+                          >
+                            {{ isResetting ? 'Réinitialisation...' : 'Confirmer la réinitialisation' }}
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            @click="showResetConfirm = false"
+                            :disabled="isResetting"
+                          >
+                            Annuler
+                          </Button>
+                        </div>
+                      </div>
                     </CardContent>
                   </Card>
                 </div>

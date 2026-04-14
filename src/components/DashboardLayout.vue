@@ -42,10 +42,13 @@ watch(() => route.path, () => {
 
     <div class="flex flex-1 flex-col overflow-hidden">
       <!-- Mobile Header -->
-      <header class="flex h-16 items-center justify-between border-b border-gray-200 bg-white px-4 lg:hidden shrink-0">
-        <span class="text-lg font-bold bg-gradient-to-r from-amber-600 to-amber-400 bg-clip-text text-transparent">
-          Gère ma Dîme
-        </span>
+      <header class="flex h-16 items-center justify-between border-b border-gray-200 bg-white px-4 lg:hidden shrink-0 gap-2">
+        <div class="flex items-center gap-2">
+          <img src="/logo.png" alt="Logo" class="h-8 w-8 object-contain rounded-md" />
+          <span class="text-lg font-bold bg-gradient-to-r from-amber-600 to-amber-400 bg-clip-text text-transparent font-display">
+            Gère ma Dîme
+          </span>
+        </div>
         <Button variant="ghost" size="icon" @click="isSidebarOpen = true">
           <Menu class="h-6 w-6" />
         </Button>

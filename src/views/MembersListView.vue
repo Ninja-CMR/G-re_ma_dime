@@ -11,7 +11,8 @@ import {
   Button, 
   Input, 
   Select, 
-  Dialog 
+  Dialog,
+  TableLoader
 } from '@/components/ui';
 import { useMemberStore } from '@/stores/memberStore';
 import { Search, UserPlus, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-vue-next';
@@ -140,7 +141,13 @@ const itemsPerPageProxy = computed({
             </TableBody>
           </Table>
         </div>
-        <div v-if="memberStore.filteredMembers.length === 0" class="p-12 text-center text-muted-foreground">
+
+        <!-- Loading State -->
+        <div v-if="memberStore.loading" class="p-6">
+          <TableLoader :rows="memberStore.itemsPerPage" :columns="5" />
+        </div>
+
+        <div v-else-if="memberStore.filteredMembers.length === 0" class="p-12 text-center text-muted-foreground">
           Aucun membre trouvé.
         </div>
 
