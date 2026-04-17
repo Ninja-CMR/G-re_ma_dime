@@ -21,13 +21,10 @@ import {
   User, 
   Church, 
   Lock, 
-  Globe, 
   Camera,
   ShieldCheck,
-  Smartphone,
   CheckCircle2,
-  Save,
-  LogOut
+  Save
 } from 'lucide-vue-next'
 import { useChurchStore } from '@/stores/churchStore'
 import { useAuthStore } from '@/stores/authStore'
@@ -54,8 +51,9 @@ const triggerToast = (message: string) => {
 
 // Local form states
 const adminForm = reactive({
-    name: authStore.user?.name || 'Admin',
-    email: authStore.user?.email || 'admin@geremadime.cm'
+    name: authStore.user?.name || 'Administrateur',
+    email: authStore.user?.email || 'user@administrateur',
+    username: authStore.user?.username || 'user@administrateur'
 })
 
 const churchForm = reactive({ ...churchStore.churchInfo })
@@ -74,6 +72,11 @@ const notifications = reactive({
 
 // Actions
 const handleSaveProfile = () => {
+    authStore.updateProfile({
+        name: adminForm.name,
+        email: adminForm.email,
+        username: adminForm.username
+    })
     triggerToast('Profil mis à jour avec succès !')
 }
 
@@ -83,19 +86,32 @@ const handleSaveChurch = () => {
 }
 
 const handleSaveSecurity = () => {
-    if (securityForm.newPassword !== securityForm.confirmPassword) {
-        alert('Les mots de passe ne correspondent pas.')
+    if (!securityForm.currentPassword) {
+        alert('Veuillez entrer votre mot de passe actuel.')
         return
     }
+    
+    // In this mock, we check if the current password matches the saved one
+    if (securityForm.currentPassword !== authStore.savedCredentials.password) {
+        alert('Le mot de passe actuel est incorrect.')
+        return
+    }
+
+    if (securityForm.newPassword !== securityForm.confirmPassword) {
+        alert('Les nouveaux mots de passe ne correspondent pas.')
+        return
+    }
+    
+    if (securityForm.newPassword.length < 6) {
+        alert('Le nouveau mot de passe doit faire au moins 6 caractères.')
+        return
+    }
+
+    authStore.updatePassword(securityForm.newPassword)
     triggerToast('Mot de passe modifié avec succès !')
     securityForm.currentPassword = ''
     securityForm.newPassword = ''
     securityForm.confirmPassword = ''
-}
-
-
-const handleLogoutDevices = () => {
-    triggerToast('Toutes les autres sessions ont été déconnectées.')
 }
 
 const isResetting = ref(false)
@@ -207,6 +223,10 @@ const handleResetData = async () => {
                         <Input id="admin-name" v-model="adminForm.name" placeholder="Votre nom" />
                       </div>
                       <div class="space-y-2">
+                        <Label for="admin-username">Nom d'utilisateur</Label>
+                        <Input id="admin-username" v-model="adminForm.username" placeholder="votre_username" />
+                      </div>
+                      <div class="space-y-2 sm:col-span-2">
                         <Label for="admin-email">Adresse e-mail</Label>
                         <Input id="admin-email" v-model="adminForm.email" type="email" placeholder="admin@example.com" />
                       </div>
@@ -307,46 +327,6 @@ const handleResetData = async () => {
                     </CardFooter>
                   </Card>
 
-                  <Card class="border-none shadow-sm border-l-4 border-l-rose-500">
-                    <CardHeader>
-                      <h3 class="text-xl font-bold text-gray-900">Sessions actives</h3>
-                      <p class="text-sm text-muted-foreground">Aperçu de vos connexions récentes.</p>
-                    </CardHeader>
-                    <CardContent class="space-y-4">
-                      <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                        <div class="flex items-center gap-4">
-                          <div class="p-2 bg-white rounded-md shadow-sm">
-                            <Smartphone class="h-5 w-5 text-gray-500" />
-                          </div>
-                          <div>
-                            <p class="text-sm font-semibold text-gray-900">iPhone 13 - Yaoundé, CM</p>
-                            <p class="text-xs text-muted-foreground text-emerald-600 font-medium">Session actuelle</p>
-                          </div>
-                        </div>
-                        <Badge class="bg-emerald-100 text-emerald-800 border-none">Actif</Badge>
-                      </div>
-
-                      <div class="flex items-center justify-between p-4 border border-gray-100 rounded-lg opacity-60">
-                        <div class="flex items-center gap-4">
-                          <div class="p-2 bg-gray-100 rounded-md">
-                            <Globe class="h-5 w-5 text-gray-500" />
-                          </div>
-                          <div>
-                            <p class="text-sm font-semibold text-gray-900">Chrome sur MacOS - Douala, CM</p>
-                            <p class="text-xs text-muted-foreground">Il y a 2 heures</p>
-                          </div>
-                        </div>
-                        <Button variant="ghost" size="sm" class="text-rose-600">Révoquer</Button>
-                      </div>
-
-                      <Separator />
-
-                      <Button variant="ghost" @click="handleLogoutDevices" class="text-rose-600 hover:bg-rose-50 w-full justify-start gap-2">
-                        <LogOut class="h-4 w-4" />
-                        Déconnecter toutes les autres sessions
-                      </Button>
-                    </CardContent>
-                  </Card>
 
                   <!-- Danger Zone -->
                   <Card class="border-none shadow-sm border-l-4 border-l-rose-600 bg-rose-50/30">
