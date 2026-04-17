@@ -137,19 +137,13 @@ const formatCurrency = (value: number) => {
       </div>
 
       <!-- KPIs -->
-      <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-2 lg:max-w-4xl">
         <StatCard
           title="Total des Dîmes (Mois)"
           :value="formatCurrency(titheStore.totalTithesThisMonth)"
           :icon="Banknote"
           description="Estimé pour le mois en cours"
           :trend="{ value: '+12.5%', positive: true }"
-        />
-        <StatCard
-          title="Membres Actifs"
-          :value="titheStore.activeMembersCount"
-          :icon="Users"
-          description="Membres enregistrés"
         />
         <StatCard
           title="Taux d'atteinte"

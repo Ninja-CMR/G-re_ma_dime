@@ -282,7 +282,6 @@ const exportToCSV = () => {
   csvContent += "SECTION: RESUME DES KPIS\n";
   csvContent += "Indicateur,Valeur\n";
   csvContent += `Total Dîmes (Mois),${titheStore.totalTithesThisMonth}\n`;
-  csvContent += `Donateurs Actifs,${titheStore.activeMembersCount}\n`;
   csvContent += `Taux d'atteinte Global,${globalAchievementRate.value}\n\n`;
   
   // Section 2: Evolution
@@ -347,20 +346,13 @@ const exportToCSV = () => {
       </div>
 
       <!-- KPIs (Consistent with Dashboard) -->
-      <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-2 lg:max-w-4xl">
         <StatCard
           title="Total des Dîmes (Mensuel)"
           :value="formatCurrency(titheStore.totalTithesThisMonth)"
           :icon="Banknote"
           description="Total cumulé ce mois-ci"
           :trend="{ value: '+12.5%', positive: true }"
-        />
-        <StatCard
-          title="Donateurs Enregistrés"
-          :value="titheStore.activeMembersCount"
-          :icon="Users"
-          description="Membres de la communauté"
-          :trend="{ value: '+2.1%', positive: true }"
         />
         <StatCard
           title="Taux d'atteinte Global"

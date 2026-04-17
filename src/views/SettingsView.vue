@@ -33,7 +33,7 @@ import { useChurchStore } from '@/stores/churchStore'
 import { useAuthStore } from '@/stores/authStore'
 import { useMemberStore } from '@/stores/memberStore'
 import { useTitheStore } from '@/stores/titheStore'
-import { Trash2, AlertTriangle, RefreshCw } from 'lucide-vue-next'
+import {  AlertTriangle, RefreshCw } from 'lucide-vue-next'
 
 const churchStore = useChurchStore()
 const authStore = useAuthStore()
