@@ -15,7 +15,6 @@ import {
   TabsList,
   TabsTrigger,
   TabsContent,
-  Badge
 } from '@/components/ui'
 import { 
   User, 
@@ -90,7 +89,6 @@ const handleSaveSecurity = () => {
         alert('Veuillez entrer votre mot de passe actuel.')
         return
     }
-    
     // In this mock, we check if the current password matches the saved one
     if (securityForm.currentPassword !== authStore.savedCredentials.password) {
         alert('Le mot de passe actuel est incorrect.')
